@@ -136,6 +136,7 @@ function applyGame() {
   $$('.rail [data-view="review"], .rail [data-view="progress"], .rail [data-view="highlights"]').forEach((b) => (b.hidden = rv));
   $(".titlebar b").textContent = rv ? "Rivals Coach" : "Melee Coach";
   document.body.classList.toggle("is-rivals", rv);
+  document.body.classList.toggle("theme-melee", (cfg.theme || "melee") === "melee");
   $("#sbConn").hidden = rv;
   if (rv && r2) $("#sbGames").textContent = `${r2.games.length} Rivals 2 game${r2.games.length === 1 ? "" : "s"}`;
   if (rv && (view === "review" || view === "progress" || view === "highlights")) view = "home";
@@ -1083,6 +1084,9 @@ function renderSettings() {
         <button class="btn" data-test="lcancel_miss">Test buzz</button><button class="btn" data-test="tech_miss">Test tech sound</button></div>
     </div></section>
     <section class="card"><h2>App</h2><div class="set" style="margin-top:14px">
+      <label class="k" for="theme">Look</label><div><select id="theme" data-set="theme">
+        <option value="melee" ${(cfg.theme || "melee") === "melee" ? "selected" : ""}>Melee: blue menus, HUD numbers</option>
+        <option value="classic" ${cfg.theme === "classic" ? "selected" : ""}>Classic: plain dark</option></select></div>
       <label class="k" for="sc">Interface scale</label><div style="display:flex;gap:12px;align-items:center"><input id="sc" type="range" min="0.7" max="1.6" step="0.1" data-set="uiScale" value="${cfg.uiScale}">
         <b>${Math.round(cfg.uiScale * 100)}%</b><span class="h">Ctrl + / Ctrl − / Ctrl 0</span></div>
       <span class="k">Window</span><div style="display:flex;flex-direction:column;gap:10px">
@@ -1198,6 +1202,7 @@ function bind(el) {
       if (k === "clipsPerGame" || k === "clipsKeepDays" || k === "clipsIdleMin") v = +v;
       const patch = k.startsWith("callouts.") ? { callouts: { [k.split(".")[1]]: v } } : { [k]: v };
       cfg = await api.setConfig(patch);
+      if (k === "theme") applyGame();
       if (k === "uiScale") { const b = i.parentElement.querySelector("b"); if (b) b.textContent = Math.round(v * 100) + "%"; }
     });
   });

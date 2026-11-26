@@ -453,3 +453,106 @@ input[type=range] { accent-color: var(--teal); width: 220px; }
 .vmodal { position: fixed; inset: 0; z-index: 60; background: rgba(0,0,0,.7); display: grid; place-items: center; padding: 30px; }
 .vbox { width: min(1100px, 100%); background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 14px; }
 .vbox video { width: 100%; max-height: 75vh; border-radius: 8px; background: #000; margin-top: 10px; display: block; }
+
+/* =====================================================================
+   Melee look (body.theme-melee): deep-blue menus with light streaks,
+   glossy pill navigation that lights up orange, HUD-style stat numbers
+   tinted by port colour. Original styling, no game assets.
+   ===================================================================== */
+body.theme-melee {
+  --bg: #080d2c; --panel: rgba(22, 34, 96, .78); --panel2: rgba(255,255,255,.055); --line: rgba(140,170,255,.22);
+  --rail: transparent; --bar: #05081c; --text: #f3f5ff; --soft: #c6cdf2; --muted: #8e98c9;
+  --teal: #42e6c8; --teal-bg: rgba(66,230,200,.14); --blue-bg: rgba(60,90,220,.2);
+  --acc: #ffb12a; --acc2: #f07a10; --solid: #111a55;
+  --hud: "Segoe UI Black", "Segoe UI", "Arial Black", system-ui, sans-serif;
+}
+body.theme-melee a, body.theme-melee .linkbtn { color: #8fd0ff; }
+body.theme-melee :focus-visible { outline-color: var(--acc); }
+
+/* backdrop: fixed behind the scrolling content */
+body.theme-melee .shell {
+  background:
+    linear-gradient(112deg, transparent 0 38%, rgba(120,160,255,.10) 41%, transparent 47%),
+    linear-gradient(112deg, transparent 0 58%, rgba(255,255,255,.05) 60%, transparent 63%),
+    linear-gradient(112deg, transparent 0 70%, rgba(120,160,255,.07) 74%, transparent 80%),
+    repeating-linear-gradient(112deg, rgba(255,255,255,.022) 0 2px, transparent 2px 26px),
+    radial-gradient(ellipse 70% 60% at 85% -10%, rgba(80,120,255,.45), transparent 70%),
+    radial-gradient(ellipse 60% 50% at 0% 110%, rgba(40,20,140,.55), transparent 70%),
+    linear-gradient(165deg, #10196a 0%, #0a1045 45%, #050822 100%);
+}
+
+/* title bar + status bar */
+body.theme-melee .titlebar { background: linear-gradient(90deg, #05081c, #0b1450 60%, #05081c); border-bottom: 0;
+  box-shadow: 0 2px 0 rgba(255,177,42,.55), 0 3px 12px rgba(255,140,20,.25); position: relative; z-index: 2; }
+body.theme-melee .titlebar b { font: italic 900 14px var(--hud); letter-spacing: 1px; text-transform: uppercase; }
+body.theme-melee .titlebar svg { stroke: var(--acc); }
+body.theme-melee .statusbar { background: #05081c; border-top: 1px solid rgba(140,170,255,.18); }
+body.theme-melee .gswitch { background: rgba(255,255,255,.06); }
+body.theme-melee .gswitch button[aria-pressed="true"] { background: linear-gradient(180deg, #ffd25a, var(--acc2)); color: #2a1400; }
+
+/* main menu: pill buttons */
+body.theme-melee .rail { width: 196px; align-items: stretch; padding: 22px 0 16px 14px; gap: 9px; border-right: 0; }
+body.theme-melee .rail button { width: 100%; flex-direction: row; justify-content: flex-start; gap: 11px; padding: 10px 18px;
+  border-radius: 999px 0 0 999px; font: italic 900 13.5px var(--hud); letter-spacing: .8px; text-transform: uppercase; color: #d9e1ff;
+  background: linear-gradient(180deg, #3550b8 0%, #1d2d82 52%, #16226a 100%);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.28), inset 0 -2px 0 rgba(0,0,0,.25), 0 3px 8px rgba(0,0,0,.35);
+  text-shadow: 0 1px 0 rgba(0,0,0,.5); transition: transform .12s ease, filter .12s ease; }
+body.theme-melee .rail button svg { flex: none; }
+body.theme-melee .rail button:hover { transform: translateX(-6px); filter: brightness(1.18); background: linear-gradient(180deg, #3550b8 0%, #1d2d82 52%, #16226a 100%); color: #fff; }
+body.theme-melee .rail button.on { transform: translateX(-10px); color: #2a1400; text-shadow: 0 1px 0 rgba(255,255,255,.35);
+  background: linear-gradient(180deg, #ffe07a 0%, #ffb12a 48%, #f07a10 100%);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.6), 0 0 0 2px rgba(255,220,140,.35), 0 0 18px rgba(255,160,30,.6); }
+body.theme-melee .rail button.on::before { content: "▶"; font-size: 10px; margin-right: -4px; }
+
+/* panels */
+body.theme-melee .card { background: linear-gradient(180deg, rgba(48,70,175,.55) 0%, rgba(18,28,88,.80) 38%, rgba(12,18,64,.86) 100%);
+  border: 1px solid rgba(150,180,255,.28); border-radius: 16px;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.16), 0 10px 26px rgba(0,0,0,.35); }
+body.theme-melee .card h2, body.theme-melee .page h1 { font-family: var(--hud); font-style: italic; font-weight: 900;
+  text-transform: uppercase; letter-spacing: .7px; text-shadow: 0 2px 0 rgba(0,0,0,.45); }
+body.theme-melee .page h1 { letter-spacing: 1px; }
+body.theme-melee .toast, body.theme-melee .vbox { background: var(--solid); border-color: rgba(255,177,42,.45); }
+
+/* buttons + controls */
+body.theme-melee .btn { border-radius: 999px; border: 1px solid rgba(150,180,255,.3); background: linear-gradient(180deg, #2c4199, #18246e);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.2); color: #eef1ff; }
+body.theme-melee .btn:hover { filter: brightness(1.15); border-color: rgba(150,180,255,.5); }
+body.theme-melee .btn.primary { background: linear-gradient(180deg, #ffd864, var(--acc) 50%, var(--acc2)); border-color: #ffcf6a; color: #2a1400;
+  font-weight: 800; box-shadow: inset 0 1px 0 rgba(255,255,255,.55), 0 0 12px rgba(255,160,30,.35); }
+body.theme-melee .switch input:checked { background: var(--acc); }
+body.theme-melee .switch input:checked::after { background: #2a1400; }
+body.theme-melee .pill.on { border-color: var(--acc); color: var(--acc); }
+body.theme-melee .seg button.on { background: linear-gradient(180deg, #ffd25a, var(--acc2)); color: #2a1400; font-weight: 700; }
+body.theme-melee input[type=text], body.theme-melee input[type=number], body.theme-melee input[type=password], body.theme-melee select, body.theme-melee textarea {
+  background: rgba(5,9,35,.6); border-color: rgba(150,180,255,.3); }
+body.theme-melee select option { background: var(--solid); }
+body.theme-melee input[type=range] { accent-color: var(--acc); }
+
+/* HUD stats: port-tinted plates, heavy italic outlined numbers */
+body.theme-melee .stat { --port: 232, 49, 58; position: relative; overflow: hidden; border-radius: 12px;
+  background: linear-gradient(180deg, rgba(var(--port), .30) 0%, rgba(var(--port), .10) 55%, rgba(0,0,0,.18) 100%);
+  border: 1px solid rgba(var(--port), .45); box-shadow: inset 0 1px 0 rgba(255,255,255,.14); }
+body.theme-melee .stat:nth-child(4n+2) { --port: 47, 107, 255; }
+body.theme-melee .stat:nth-child(4n+3) { --port: 245, 196, 0; }
+body.theme-melee .stat:nth-child(4n+4) { --port: 46, 194, 74; }
+body.theme-melee .stat::after { content: "P1"; position: absolute; top: 7px; right: 9px; font: italic 900 10px var(--hud);
+  color: rgb(var(--port)); text-shadow: 0 1px 0 rgba(0,0,0,.6); opacity: .9; }
+body.theme-melee .stat:nth-child(4n+2)::after { content: "P2"; }
+body.theme-melee .stat:nth-child(4n+3)::after { content: "P3"; }
+body.theme-melee .stat:nth-child(4n+4)::after { content: "P4"; }
+body.theme-melee .stat label { text-transform: uppercase; font: italic 800 11px var(--hud); letter-spacing: .6px; color: #dfe5ff; opacity: .85; }
+body.theme-melee .stat b { font: italic 900 31px/1.1 var(--hud); letter-spacing: -.5px; margin-top: 4px;
+  -webkit-text-stroke: 1.2px rgba(0,0,0,.85); paint-order: stroke fill;
+  text-shadow: 2px 3px 0 rgba(0,0,0,.55); }
+body.theme-melee .stat b:not(.good):not(.bad):not(.mid) { color: #fff; }
+body.theme-melee .chip { box-shadow: 0 0 0 2px rgba(255,255,255,.25), 0 2px 4px rgba(0,0,0,.4); }
+/* selection = orange "cursor" glow, like a highlighted menu item */
+body.theme-melee :is(.grow.sel, .review .grow.sel, .glist .grow.sel, .scard.sel, .srow.sel, .murow.sel, .sc.sel) {
+  border-color: var(--acc); background: linear-gradient(90deg, rgba(255,177,42,.22), rgba(255,177,42,.06));
+  box-shadow: inset 3px 0 0 var(--acc), 0 0 12px rgba(255,160,30,.25); }
+body.theme-melee .tabs button.on { border-color: var(--acc); color: var(--acc); background: rgba(255,177,42,.1); }
+body.theme-melee :is(.gchip, .story):hover { border-color: var(--acc); }
+body.theme-melee .focus { background: linear-gradient(180deg, rgba(255,177,42,.14), rgba(18,28,88,.8) 55%); border-color: rgba(255,177,42,.55); }
+body.theme-melee .toast-ic { background: rgba(255,177,42,.15); color: var(--acc); }
+body.theme-melee .stat label { padding-right: 18px; }
+body.theme-melee .rail { padding-left: 22px; }
