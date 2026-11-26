@@ -1,10 +1,9 @@
 {
-  "version": "0.13.1",
+  "version": "0.13.2",
   "notes": [
-    "Review rebuilt around the video: it sits at the top of the page, with the events and notes underneath",
-    "Matches are listed next to the menu, grouped by month like the Games tab, with a divider for each session",
-    "Video is bigger by default; drag the bar under it or go full screen (F)"
+    "Drag the timeline like on YouTube: hold the circle (or anywhere on the bar) and the video follows your mouse; hover to see the time",
+    "Volume slider and mute button next to full screen (M to mute); your level is remembered"
   ],
-  "file": "updates/app-0.13.1.mcupd",
+  "file": "updates/app-0.13.2.mcupd",
   "installer": false
 }

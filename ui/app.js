@@ -645,7 +645,7 @@ function mountPlayer(box, gid, info, clipEv) {
     <div class="scrub" data-scrub>
       ${(g?.stocks || []).slice(1).map((st) => `<span class="stk" style="left:${at(st.startFrame)}" title="Stock ${st.n}"></span>`).join("")}
       ${evs.map((e) => `<span class="mk ${evKey(e) === ui.rEvent ? "on" : ""}" data-mk="${esc(evKey(e))}" style="left:${at(e.frame)};background:${EV[e.type].color}" title="${ftime(e.frame)} ${esc(e.label)}"></span>`).join("")}
-      <span class="head" style="left:0"></span></div>
+      <span class="played" style="width:0"></span><span class="head" style="left:0"></span><span class="tip" hidden></span></div>
     <div class="itl-wrap"><canvas class="itl" height="150" aria-label="Your inputs frame by frame around the playhead"></canvas>
       <div class="itl-legend"><span><i style="background:#21d0bf55"></i>L-cancel window (7 frames)</span><span><i style="background:#f1c23255"></i>tech window (20 frames)</span><span><i style="background:#ef6461"></i>landing / ground hit</span><span class="sub">one column = one frame · centre line = current frame</span></div></div>
     <div class="pctrl">
@@ -658,7 +658,9 @@ function mountPlayer(box, gid, info, clipEv) {
       <div class="seg" role="group" aria-label="Speed">${[0.25, 0.5, 1].map((r) => `<button data-rate="${r}" class="${r === (ui.rate || 1) ? "on" : ""}">${r === 0.25 ? "¼×" : r === 0.5 ? "½×" : "1×"}</button>`).join("")}</div>
       <label class="switch" style="font-size:12.5px" title="Skip the parts between events"><input type="checkbox" data-evonly ${ui.evOnly ? "checked" : ""}> Events only</label>
       <label class="switch" style="font-size:12.5px"><input type="checkbox" data-stop ${ui.stopAt !== false ? "checked" : ""}> Pause on event</label>
-      <button class="btn icon fsbtn" data-p="fs" aria-label="Full screen" title="Full screen (F)"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button>
+      <span class="vol fsbtn"><button class="btn icon" data-p="mute" aria-label="Mute" title="Mute (M)"></button>
+        <input type="range" min="0" max="1" step="0.05" data-vol aria-label="Volume" value="${cfg.clipMuted ? 0 : cfg.clipVolume ?? 1}"></span>
+      <button class="btn icon" data-p="fs" aria-label="Full screen" title="Full screen (F)"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button>
     </div>`;
   const v = $("video", box), head = $(".head", box), ro = $("[data-readout]", box), note = $(".pnote", box), scrub = $("[data-scrub]", box);
   const tOf = (f) => Math.max(0, (f - meta.start) / 60), fOf = () => Math.round(v.currentTime * 60) + meta.start;
@@ -666,8 +668,9 @@ function mountPlayer(box, gid, info, clipEv) {
   let target = null; // event we're heading to (pause when reached)
   v.playbackRate = ui.rate || 1;
   const near = (f) => evs.find((e) => Math.abs(e.frame - f) <= 40) || null;
+  const played = $(".played", scrub), tip = $(".tip", scrub);
   const tick = () => {
-    const f = fOf(); head.style.left = at(f); itl.draw(f);
+    const f = fOf(); head.style.left = at(f); played.style.width = at(f); itl.draw(f);
     const e = near(f);
     const total = clipEv ? ftime(meta.end) : dur(meta.end + 123);
     if (e) { const rel = f - e.frame; ro.innerHTML = `<b>${ftime(f)}</b> / ${total} · ${rel === 0 ? "on" : `${rel > 0 ? "+" : ""}${rel}f`} ${esc(e.label)}`; note.hidden = false; note.innerHTML = `<i class="evdot" style="background:${EV[e.type].color}"></i><b>${esc(e.label)}</b> ${esc(e.sub)}`; }
@@ -707,7 +710,28 @@ function mountPlayer(box, gid, info, clipEv) {
   $("[data-evonly]", box).onchange = (e) => { ui.evOnly = e.target.checked; };
   $("[data-stop]", box).onchange = (e) => { ui.stopAt = e.target.checked; };
   $$(".mk", box).forEach((m) => m.onclick = (ev) => { ev.stopPropagation(); const e = evs.find((x) => evKey(x) === m.dataset.mk); if (e) select(e); });
-  scrub.onclick = (ev) => { const r = scrub.getBoundingClientRect(); target = null; v.currentTime = ((ev.clientX - r.left) / r.width) * (len / 60); };
+  // YouTube-style scrubbing: press anywhere on the bar and drag; the video follows the mouse
+  const xToT = (x) => { const r = scrub.getBoundingClientRect(); return Math.max(0, Math.min(1, (x - r.left) / r.width)) * (len / 60); };
+  const showAt = (t) => { const f = Math.round(t * 60) + meta.start; head.style.left = at(f); played.style.width = at(f); itl.draw(f); };
+  let dragging = false, resume = false, seekT = null, seeking = false;
+  const seek = (t) => { seekT = t; showAt(t); if (seeking) return; seeking = true;
+    const go = () => { const t2 = seekT; seekT = null; v.currentTime = t2; v.addEventListener("seeked", () => { if (seekT != null) go(); else seeking = false; }, { once: true }); }; go(); };
+  scrub.onpointerdown = (e) => { if (e.button !== 0 || e.target.closest(".mk")) return; e.preventDefault(); dragging = true; target = null;
+    resume = !v.paused; v.pause(); scrub.classList.add("drag"); try { scrub.setPointerCapture(e.pointerId); } catch {} seek(xToT(e.clientX)); };
+  scrub.onpointermove = (e) => { const t = xToT(e.clientX), r = scrub.getBoundingClientRect();
+    tip.hidden = false; tip.textContent = ftime(Math.round(t * 60) + meta.start); tip.style.left = `${Math.max(0, Math.min(r.width, e.clientX - r.left))}px`;
+    if (dragging) seek(t); };
+  scrub.onpointerleave = () => { if (!dragging) tip.hidden = true; };
+  scrub.onpointerup = scrub.onpointercancel = (e) => { if (!dragging) return; dragging = false; scrub.classList.remove("drag"); tip.hidden = true; seek(xToT(e.clientX ?? 0)); if (resume) v.play(); };
+  // volume
+  const vol = $("[data-vol]", box), mb = $("[data-p=mute]", box);
+  const icon = () => { const m = v.muted || v.volume === 0; mb.innerHTML = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z" fill="currentColor"/>${m ? '<path d="M17 9l5 6M22 9l-5 6"/>' : v.volume < 0.5 ? '<path d="M16.5 9.5a3.5 3.5 0 0 1 0 5"/>' : '<path d="M16.5 9.5a3.5 3.5 0 0 1 0 5M19 7a7 7 0 0 1 0 10"/>'}</svg>`;
+    mb.setAttribute("aria-label", m ? "Unmute" : "Mute"); mb.title = (m ? "Unmute" : "Mute") + " (M)"; vol.value = m ? 0 : v.volume; vol.style.setProperty("--v", (m ? 0 : v.volume) * 100 + "%"); };
+  let volSave = null; const saveVol = () => { clearTimeout(volSave); volSave = setTimeout(() => api.setConfig({ clipVolume: v.volume, clipMuted: v.muted }).then((c) => (cfg = c)), 400); };
+  v.volume = cfg.clipVolume ?? 1; v.muted = !!cfg.clipMuted; icon();
+  vol.oninput = () => { const x = +vol.value; if (x === 0) v.muted = true; else { v.muted = false; v.volume = x; } icon(); saveVol(); };
+  const toggleMute = () => { if (v.muted || v.volume === 0) { v.muted = false; if (v.volume === 0) v.volume = 0.5; } else v.muted = true; icon(); saveVol(); };
+  mb.onclick = toggleMute;
   const fs = () => { if (document.fullscreenElement) document.exitFullscreen(); else box.requestFullscreen().then(() => box.focus()).catch(() => {}); };
   $("[data-p=fs]", box).onclick = fs;
   v.ondblclick = fs;
@@ -720,7 +744,7 @@ function mountPlayer(box, gid, info, clipEv) {
   vr.ondblclick = () => setH(60, true);
   vr.onkeydown = (e) => { if (e.key === "ArrowUp" || e.key === "ArrowDown") { e.preventDefault(); setH((cfg.playerH || 60) + (e.key === "ArrowDown" ? 5 : -5), true); } };
   box.tabIndex = -1;
-  box.onkeydown = (e) => { if (e.key === "f" || e.key === "F") { fs(); e.preventDefault(); return; } if (e.key === "," || e.key === "ArrowLeft") { step(-1); e.preventDefault(); } else if (e.key === "." || e.key === "ArrowRight") { step(1); e.preventDefault(); } else if (e.key === " ") { v.paused ? v.play() : v.pause(); e.preventDefault(); } };
+  box.onkeydown = (e) => { if (e.target.matches("input")) return; if (e.key === "f" || e.key === "F") { fs(); e.preventDefault(); return; } if (e.key === "m" || e.key === "M") { toggleMute(); e.preventDefault(); return; } if (e.key === "," || e.key === "ArrowLeft") { step(-1); e.preventDefault(); } else if (e.key === "." || e.key === "ArrowRight") { step(1); e.preventDefault(); } else if (e.key === " ") { v.paused ? v.play() : v.pause(); e.preventDefault(); } };
   const rb = $("[data-record]", box);
   if (rb) rb.onclick = async () => { clipState[fullKey] = { state: "queued" }; rb.outerHTML = `<span class="sub end">Full match recording queued</span>`;
     const r = await api.renderClip({ gameId: gid, frame: "full" }); if (!r.ok) clipState[fullKey] = { state: "error", error: r.error }; };
