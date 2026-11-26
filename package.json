@@ -1,6 +1,6 @@
 {
   "name": "melee-coach",
-  "version": "0.12.2",
+  "version": "0.13.0",
   "description": "Live coaching and replay analysis for Super Smash Bros. Melee",
   "main": "main.js",
   "scripts": {
@@ -67,8 +67,10 @@
     "afterPack": "build/afterPack.js"
   },
   "notes": [
-    "Menu has its own darker panel with a divider, so buttons no longer run into the page",
-    "☰ button (or Ctrl+B) collapses the menu to icons; it remembers your choice"
+    "Fixed: the Games tab showed nothing (the game details were pushed off the page)",
+    "Drag the edge of the Games, Sessions, Matches and Matchups lists to make them wider or narrower; double-click to reset",
+    "Drag the bar under a clip to make the video bigger, or go full screen with the ⛶ button, F or a double-click on the video",
+    "Layouts adapt to the space next to the menu; small windows switch the menu to icons automatically"
   ],
   "repository": "github:MaxChaconM/melee-coach"
 }

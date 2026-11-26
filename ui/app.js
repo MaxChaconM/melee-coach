@@ -324,7 +324,7 @@ async function renderGames(el) {
             <span class="gdmeta">${l.length} game${l.length === 1 ? "" : "s"} · ${rec(l)}</span></button>
             ${mo ? l.map(row).join("") : ""}`; }).join("");
       })()}
-      </div></div></aside>
+      </div></aside>
     <div class="gdetail"><div class="page">${liveStrip()}${gameDetail(g)}</div></div></div>`;
   bind(el);
   const sel = $(".grow.sel", el); if (sel && !ui._scrolled) { sel.scrollIntoView({ block: "nearest" }); }
@@ -625,7 +625,8 @@ function mountPlayer(box, gid, info, clipEv) {
   const len = meta.end - meta.start + 1, at = (f) => `${Math.max(0, Math.min(100, (100 * (f - meta.start)) / len))}%`;
   box.innerHTML = `${clipEv ? `<div class="clipbar"><span class="tag teal">CLIP</span><span class="sub">${ftime(meta.start)}–${ftime(meta.end)} of this match</span>
       ${fst && fst.state !== "error" ? `<span class="sub end">${fst.state === "rendering" ? `Recording full match… ${fst.pct ?? 0}%` : "Full match recording queued"}</span>` : `<button class="btn end" data-record="1">Record full match (${dur(g?.durationFrames || 0)})</button>`}</div>` : ""}
-    <div class="player"><video src="${info.url}" preload="auto" playsinline></video><div class="pnote" hidden></div></div>
+    <div class="player" style="--player-h:${cfg.playerH || 50}vh"><video src="${info.url}" preload="auto" playsinline></video><div class="pnote" hidden></div></div>
+    <div class="vresize" role="separator" aria-orientation="horizontal" aria-label="Video size" tabindex="0" title="Drag to make the video bigger or smaller (double-click to reset)"><span></span></div>
     <div class="scrub" data-scrub>
       ${(g?.stocks || []).slice(1).map((st) => `<span class="stk" style="left:${at(st.startFrame)}" title="Stock ${st.n}"></span>`).join("")}
       ${evs.map((e) => `<span class="mk ${evKey(e) === ui.rEvent ? "on" : ""}" data-mk="${esc(evKey(e))}" style="left:${at(e.frame)};background:${EV[e.type].color}" title="${ftime(e.frame)} ${esc(e.label)}"></span>`).join("")}
@@ -642,6 +643,7 @@ function mountPlayer(box, gid, info, clipEv) {
       <div class="seg" role="group" aria-label="Speed">${[0.25, 0.5, 1].map((r) => `<button data-rate="${r}" class="${r === (ui.rate || 1) ? "on" : ""}">${r === 0.25 ? "¼×" : r === 0.5 ? "½×" : "1×"}</button>`).join("")}</div>
       <label class="switch" style="font-size:12.5px" title="Skip the parts between events"><input type="checkbox" data-evonly ${ui.evOnly ? "checked" : ""}> Events only</label>
       <label class="switch" style="font-size:12.5px"><input type="checkbox" data-stop ${ui.stopAt !== false ? "checked" : ""}> Pause on event</label>
+      <button class="btn icon fsbtn" data-p="fs" aria-label="Full screen" title="Full screen (F)"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button>
     </div>`;
   const v = $("video", box), head = $(".head", box), ro = $("[data-readout]", box), note = $(".pnote", box), scrub = $("[data-scrub]", box);
   const tOf = (f) => Math.max(0, (f - meta.start) / 60), fOf = () => Math.round(v.currentTime * 60) + meta.start;
@@ -691,8 +693,19 @@ function mountPlayer(box, gid, info, clipEv) {
   $("[data-stop]", box).onchange = (e) => { ui.stopAt = e.target.checked; };
   $$(".mk", box).forEach((m) => m.onclick = (ev) => { ev.stopPropagation(); const e = evs.find((x) => evKey(x) === m.dataset.mk); if (e) select(e); });
   scrub.onclick = (ev) => { const r = scrub.getBoundingClientRect(); target = null; v.currentTime = ((ev.clientX - r.left) / r.width) * (len / 60); };
+  const fs = () => { if (document.fullscreenElement) document.exitFullscreen(); else box.requestFullscreen().then(() => box.focus()).catch(() => {}); };
+  $("[data-p=fs]", box).onclick = fs;
+  v.ondblclick = fs;
+  // drag the bar under the video to resize it; the size is remembered
+  const vr = $(".vresize", box), pl = $(".player", box);
+  const setH = (vh, save) => { vh = Math.max(25, Math.min(85, Math.round(vh))); pl.style.setProperty("--player-h", vh + "vh"); if (save) api.setConfig({ playerH: vh }).then((c) => (cfg = c)); return vh; };
+  vr.onpointerdown = (e) => { e.preventDefault(); try { vr.setPointerCapture(e.pointerId); } catch {} const y0 = e.clientY, h0 = pl.getBoundingClientRect().height; let vh = cfg.playerH || 50;
+    vr.onpointermove = (m) => { vh = setH(((h0 + m.clientY - y0) / innerHeight) * 100); };
+    vr.onpointerup = () => { vr.onpointermove = vr.onpointerup = null; setH(vh, true); }; };
+  vr.ondblclick = () => setH(50, true);
+  vr.onkeydown = (e) => { if (e.key === "ArrowUp" || e.key === "ArrowDown") { e.preventDefault(); setH((cfg.playerH || 50) + (e.key === "ArrowDown" ? 5 : -5), true); } };
   box.tabIndex = -1;
-  box.onkeydown = (e) => { if (e.key === "," || e.key === "ArrowLeft") { step(-1); e.preventDefault(); } else if (e.key === "." || e.key === "ArrowRight") { step(1); e.preventDefault(); } else if (e.key === " ") { v.paused ? v.play() : v.pause(); e.preventDefault(); } };
+  box.onkeydown = (e) => { if (e.key === "f" || e.key === "F") { fs(); e.preventDefault(); return; } if (e.key === "," || e.key === "ArrowLeft") { step(-1); e.preventDefault(); } else if (e.key === "." || e.key === "ArrowRight") { step(1); e.preventDefault(); } else if (e.key === " ") { v.paused ? v.play() : v.pause(); e.preventDefault(); } };
   const rb = $("[data-record]", box);
   if (rb) rb.onclick = async () => { clipState[fullKey] = { state: "queued" }; rb.outerHTML = `<span class="sub end">Full match recording queued</span>`;
     const r = await api.renderClip({ gameId: gid, frame: "full" }); if (!r.ok) clipState[fullKey] = { state: "error", error: r.error }; };
@@ -1140,7 +1153,26 @@ function renderSettings() {
 }
 
 // ------------------------------------------------------------------ events
+// ------------------------------------------------------------------ resizable side lists
+const PANES = [[".games-layout > .glist", "games", 300], [".review > .snav", "sessions", 250], [".review > .glist", "matches", 290], [".review > .mulist", "matchups", 240]];
+function addSplitters(el) {
+  for (const [sel, key, def] of PANES) {
+    const pane = $(sel, el); if (!pane || pane.nextElementSibling?.classList.contains("splitter")) continue;
+    const w0 = (cfg.panes || {})[key]; if (w0) pane.style.cssText += `;flex:0 0 ${w0}px;width:${w0}px`;
+    const sp = document.createElement("div"); sp.className = "splitter"; sp.tabIndex = 0;
+    sp.setAttribute("role", "separator"); sp.setAttribute("aria-orientation", "vertical"); sp.setAttribute("aria-label", `Resize the ${key} list`);
+    sp.title = "Drag to resize (double-click to reset)"; pane.after(sp);
+    const set = (w, save) => { w = Math.max(180, Math.min(640, Math.round(w))); pane.style.flex = `0 0 ${w}px`; pane.style.width = w + "px";
+      if (save) api.setConfig({ panes: { ...(cfg.panes || {}), [key]: w } }).then((c) => (cfg = c)); return w; };
+    sp.onpointerdown = (e) => { e.preventDefault(); try { sp.setPointerCapture(e.pointerId); } catch {} sp.classList.add("drag"); const x0 = e.clientX, w0 = pane.getBoundingClientRect().width; let w = w0;
+      sp.onpointermove = (m) => { w = set(w0 + m.clientX - x0); };
+      sp.onpointerup = () => { sp.onpointermove = sp.onpointerup = null; sp.classList.remove("drag"); set(w, true); }; };
+    sp.ondblclick = () => set(def, true);
+    sp.onkeydown = (e) => { if (e.key === "ArrowLeft" || e.key === "ArrowRight") { e.preventDefault(); set(pane.getBoundingClientRect().width + (e.key === "ArrowRight" ? 20 : -20), true); } };
+  }
+}
 function bind(el) {
+  addSplitters(el);
   $$("[data-go]", el).forEach((b) => b.onclick = () => go(b.dataset.go));
   $$("[data-game]", el).forEach((b) => b.onclick = () => go("games", { gameId: b.dataset.game, stock: "all", metric: null }));
   $$("[data-moment]", el).forEach((b) => b.onclick = () => { const [gid] = b.dataset.moment.split("|"); const g = games.find((x) => x.id === gid);

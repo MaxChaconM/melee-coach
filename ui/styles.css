@@ -198,26 +198,6 @@ input[type=range] { accent-color: var(--teal); width: 220px; }
 .folder { display: flex; gap: 10px; align-items: center; padding: 8px 10px; background: var(--panel2); border-radius: 8px; margin-bottom: 6px; font-size: 13px; }
 .folder span { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
-/* ---------- responsive ---------- */
-@media (max-width: 1100px) {
-  .glist { width: 250px; }
-  .page { padding: 22px 22px 40px; }
-}
-@media (max-width: 860px) {
-  .shell { flex-direction: column; }
-  .rail { width: 100%; flex-direction: row; justify-content: center; padding: 6px; border-right: 0; border-bottom: 1px solid #26272c; }
-  .rail .spacer { display: none; }
-  .rail button { width: 70px; }
-  .content { height: calc(100% - 66px); }
-  .sb-track { width: 90px; }
-  .snav, .mlist { max-height: 320px; flex-basis: 100%; }
-  .games-layout { flex-direction: column; height: auto; }
-  .glist { width: 100%; max-height: 260px; border-right: 0; border-bottom: 1px solid #26272c; }
-  .gdetail { overflow: visible; }
-  .set { grid-template-columns: 1fr; }
-  .page { padding: 18px 14px 36px; }
-}
-
 /* ---------- progress bars (HTML so text never stretches) ---------- */
 .pchart { position: relative; display: flex; align-items: flex-end; gap: 14px; height: 200px; margin-top: 18px; padding: 0 6px 44px 6px; }
 .pchart .tline { position: absolute; left: 0; right: 0; border-top: 1.5px dashed var(--teal); }
@@ -300,7 +280,6 @@ input[type=range] { accent-color: var(--teal); width: 220px; }
 .pnote b { color: var(--text); margin-right: 6px; }
 .rbar { height: 6px; border-radius: 3px; background: var(--line); overflow: hidden; margin: 12px auto 10px; max-width: 320px; }
 .rbar span { display: block; height: 100%; background: var(--teal); transition: width .4s; }
-@media (max-width: 1100px) { .review .glist { flex: 1 1 100%; max-height: 260px; } }
 .review .grow, .evrow, .evstock { flex: none; }
 .player { max-height: 50vh; }
 .review .glist { flex-basis: 290px; } .review .grow .sub { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -354,7 +333,6 @@ input[type=range] { accent-color: var(--teal); width: 220px; }
 .kbar .track i { display: block; height: 100%; border-radius: 4px; }
 .kbar b { text-align: right; font-variant-numeric: tabular-nums; }
 .drill { display: flex; gap: 12px; align-items: baseline; margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--line); font-size: 13.5px; }
-@media (max-width: 1100px) { .mulist { flex: 1 1 100%; max-height: 240px; } }
 .mulist details { background: none; border: 0; padding: 0; } .mulist details summary { padding: 6px 2px; position: static; background: none; display: block; }
 .tips.mine li { color: #d4d5da; }
 .wrow.static:hover { background: none; }
@@ -434,7 +412,6 @@ input[type=range] { accent-color: var(--teal); width: 220px; }
 .focus .fx b { font-size: 16px; } .focus .fv { font-size: 26px; font-weight: 700; font-variant-numeric: tabular-nums; }
 .rbar.wide { max-width: none; margin: 10px 0 0; }
 .fgrid { display: grid; grid-template-columns: 1.4fr 1fr; gap: 24px; margin-top: 12px; }
-@media (max-width: 1100px) { .fgrid { grid-template-columns: 1fr; } }
 .fbars { display: flex; gap: 10px; align-items: flex-end; overflow-x: auto; padding: 8px 0 2px; }
 .fbar { display: flex; flex-direction: column; align-items: center; gap: 4px; min-width: 64px; font-size: 12px; font-variant-numeric: tabular-nums; }
 .fbar .col { position: relative; width: 28px; height: 90px; background: var(--panel2); border-radius: 6px; display: flex; align-items: flex-end; overflow: hidden; }
@@ -579,3 +556,47 @@ body.theme-melee.rail-min .rail button { padding: 11px 0; gap: 0; }
 body.theme-melee.rail-min .rail button.on::before { display: none; }
 body.theme-melee.rail-min .rail button:hover, body.theme-melee.rail-min .rail button.on { transform: none; }
 .rail, .rail button { transition: width .15s ease, padding .15s ease, transform .12s ease, filter .12s ease; }
+
+/* ---------- layout responds to the space next to the menu, not the window ---------- */
+.content { container: content / inline-size; }
+/* small windows: menu shrinks to icons automatically */
+@media (max-width: 1000px) {
+  .rail { width: 66px !important; } .rail .lbl { display: none; } .rail button { justify-content: center; }
+  body.theme-melee .rail { width: 74px !important; padding: 22px 10px 16px; } body.theme-melee .rail button { padding: 11px 0; gap: 0; justify-content: center; }
+  body.theme-melee .rail button.on::before { display: none; } body.theme-melee .rail button:hover, body.theme-melee .rail button.on { transform: none; }
+}
+@container content (max-width: 1050px) {
+  .page { padding: 20px 20px 40px; }
+  .fgrid { grid-template-columns: 1fr; }
+  .stats { grid-template-columns: repeat(auto-fit, minmax(105px, 1fr)); }
+}
+@container content (max-width: 880px) {
+  .review .snav, .review .glist, .review .mulist { flex: 1 1 100% !important; width: auto !important; max-height: 240px; }
+  .review > .splitter { display: none; }
+}
+@container content (max-width: 700px) {
+  .games-layout { flex-direction: column; height: auto; }
+  .games-layout > .glist { width: 100% !important; flex: none !important; max-height: 300px; border-right: 0; border-bottom: 1px solid var(--line); }
+  .games-layout > .splitter { display: none; }
+  .gdetail { overflow: visible; }
+  .set { grid-template-columns: 1fr; }
+  .page { padding: 16px 12px 32px; }
+}
+
+/* ---------- splitters ---------- */
+.splitter { flex: none; width: 10px; align-self: stretch; cursor: col-resize; position: relative; margin: 0 -5px; z-index: 2; touch-action: none; }
+.splitter::after { content: ""; position: absolute; top: 0; bottom: 0; left: 4px; width: 2px; border-radius: 1px; background: transparent; transition: background .12s; }
+.splitter:hover::after, .splitter.drag::after, .splitter:focus-visible::after { background: var(--acc, var(--teal)); }
+.review > .splitter { margin: 0 -13px; min-height: 120px; }
+.games-layout > .splitter { margin: 0 -5px 0 -5px; }
+
+/* ---------- video: resizable, full screen ---------- */
+.player, .player[style] { max-height: var(--player-h, 50vh); }
+.vresize { height: 12px; margin: 2px auto 0; cursor: row-resize; display: grid; place-items: center; touch-action: none; }
+.vresize span { width: 46px; height: 4px; border-radius: 2px; background: var(--line); transition: background .12s; }
+.vresize:hover span, .vresize:focus-visible span { background: var(--acc, var(--teal)); }
+.pctrl .fsbtn { margin-left: auto; }
+.clipbox:fullscreen { background: #05081c; padding: 16px 20px; display: flex; flex-direction: column; gap: 10px; overflow: auto; }
+.clipbox:fullscreen .player { max-height: none; flex: 1 1 auto; min-height: 0; width: 100%; aspect-ratio: auto; }
+.clipbox:fullscreen .vresize, .clipbox:fullscreen .clipbar { display: none; }
+.clipbox:fullscreen .itl-wrap { flex: none; }
