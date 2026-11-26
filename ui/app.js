@@ -512,6 +512,8 @@ function oppSelect() {
 
 function renderReview() {
   const sessList = sessions(byOpp(games)).slice().reverse();
+  if (ui.rGame && !(sessList.find((x) => x.start === ui.session)?.games || []).some((x) => x.id === ui.rGame)) {
+    const owner = sessList.find((x) => x.games.some((y) => y.id === ui.rGame)); if (owner) ui.session = owner.start; }
   if (!ui.session || !sessList.some((x) => x.start === ui.session)) ui.session = sessList[0]?.start;
   const sess = sessList.find((x) => x.start === ui.session);
   const gs = (sess?.games || []).slice().sort((a, b) => Date.parse(a.startedAt) - Date.parse(b.startedAt)); // play order (numbers, ‹ ›)
@@ -526,37 +528,26 @@ function renderReview() {
   const counts = Object.fromEntries(Object.keys(EV).map((k) => [k, all.filter((e) => e.type === k).length]));
   const stocksOf = [...new Set(shown.map((e) => e.stock))];
   const idx = gs.indexOf(sum);
-  return `<div class="page">${liveStrip()}
-    <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">
-      <div><h1 style="margin:0;font-size:22px">Review</h1>
-        <div class="sub">${sess ? `${day(sess.start)} · ${clock(sess.start)}–${clock(sess.end)} · ${gs.length} match${gs.length === 1 ? "" : "es"}` : ""}</div></div>
-      <span class="end" style="display:flex;gap:10px;align-items:center">${oppSelect()}
-      <button class="btn" data-act="recordSession" title="Record every match in this session that doesn't have a video yet">Record all matches</button></span></div>
-    <div class="review">
-    ${sessionNav(sessList)}
-    <div class="glist" role="list" aria-label="Matches">
-      <div class="sub" style="text-transform:uppercase;letter-spacing:.6px">${gs.length} match${gs.length === 1 ? "" : "es"} · newest first</div>
-      ${newestFirst.map((x) => { const t = x.totals || {}; const lcm = (t.lcTotal || 0) - (t.lcOk || 0);
-        return `<button class="grow ${x.id === ui.rGame ? "sel" : ""}" data-rgame="${esc(x.id)}" role="listitem">
-          <span class="gn">${gs.indexOf(x) + 1}</span>${chip(x.oppChar, 28)}
-          <span style="min-width:0;flex:1"><b style="display:block">vs ${esc(x.oppChar)} <span class="res ${x.result === "win" ? "w" : x.result === "loss" ? "l" : ""}">${x.result === "win" ? "W" : x.result === "loss" ? "L" : "–"}</span></b>
-            <span class="sub">${esc(x.stage)} · ${dur(x.durationFrames || 0)}</span>
-            <span class="gcounts"><span><i style="background:${EV.lcancel.color}"></i>${lcm}</span><span><i style="background:${EV.tech.color}"></i>${t.missedTechs || 0}</span></span></span>
-          <span class="vid" data-vid="${esc(x.id)}" title="Recorded"></span></button>`; }).join("")}
-    </div>
-    <div class="mdetail">${!sum ? `<div class="card empty">No matches in this session.</div>` : `
-      <section class="card">
-        <div class="card-head">${chip(sum.oppChar, 30)}<b>Match ${idx + 1} · vs ${esc(sum.oppChar)}</b>
-          <span class="sub">${esc(sum.stage)} · ${dur(sum.durationFrames || 0)} · ${sum.result === "win" ? "won" : sum.result === "loss" ? "lost" : "unfinished"} ${sum.endStocks ? `${sum.endStocks.me ?? "–"}–${sum.endStocks.opp ?? "–"}` : ""}</span>
-          <span class="end" style="display:flex;gap:6px">
-            <button class="btn icon" data-gstep="-1" ${idx <= 0 ? "disabled" : ""} aria-label="Previous match">‹</button>
-            <button class="btn icon" data-gstep="1" ${idx >= gs.length - 1 ? "disabled" : ""} aria-label="Next match">›</button>
-            <button class="linkbtn" data-game="${esc(sum.id)}">Stats</button></span></div>
+  const total = sessList.reduce((n, x) => n + x.games.length, 0);
+  return `<div class="games-layout rv-layout">
+    <aside class="glist"><div class="head"><b>Review</b><span class="sub" style="margin-left:auto">${total} match${total === 1 ? "" : "es"}</span></div>
+      <div style="padding:0 10px 8px">${oppSelect()}</div>
+      <div class="rows">${reviewNav(sessList, sum)}</div></aside>
+    <div class="gdetail"><div class="page rvpage">${liveStrip()}
+    ${!sum ? `<div class="card empty">No matches yet.</div>` : `
+      <section class="card rvplayer">
+        <div class="card-head">${chip(sum.oppChar, 30)}<div style="min-width:0"><b style="font-size:15px">Match ${idx + 1} of ${gs.length} · vs ${esc(sum.oppChar)}</b>
+            <div class="sub">${day(sum.startedAt)}, ${clock(sum.startedAt)} · ${esc(sum.stage)} · ${dur(sum.durationFrames || 0)} · ${sum.result === "win" ? "won" : sum.result === "loss" ? "lost" : "unfinished"} ${sum.endStocks ? `${sum.endStocks.me ?? "–"}–${sum.endStocks.opp ?? "–"}` : ""}</div></div>
+          <span class="end" style="display:flex;gap:6px;align-items:center">
+            <button class="btn icon" data-gstep="-1" ${idx <= 0 ? "disabled" : ""} aria-label="Previous match" title="Previous match in this session">‹</button>
+            <button class="btn icon" data-gstep="1" ${idx >= gs.length - 1 ? "disabled" : ""} aria-label="Next match" title="Next match in this session">›</button>
+            <button class="btn" data-game="${esc(sum.id)}">Stats</button>
+            <button class="btn" data-act="recordSession" title="Record every match in this session that doesn't have a video yet">Record session</button></span></div>
         <div class="clipbox" id="clipBox" data-gid="${esc(sum.id)}" style="margin-top:14px"><div class="viewer-ph"><div class="sub">Loading…</div></div></div>
         <div class="evchips" role="group" aria-label="Show events">${Object.entries(EV).map(([k, v]) => `<button class="evchip ${ui.evOn[k] ? "on" : ""}" data-evt="${k}" aria-pressed="${!!ui.evOn[k]}">
           <i style="background:${v.color}"></i>${v.label}<b>${counts[k]}</b></button>`).join("")}</div>
       </section>
-      ${evDetailHtml(sel)}
+      <div class="rvbelow">
       <section class="card evlist">${!g ? `<div class="sub">Loading match…</div>` : !shown.length ? `<div class="sub">Nothing to show for the selected event types. Clean match.</div>` :
         stocksOf.map((n) => { const st = g.stocks.find((x) => x.n === n);
           return `<div class="evstock"><span>Stock ${n}</span><span class="sub">${st ? `${ftime(st.startFrame)}–${ftime(st.endFrame ?? g.durationFrames)}` : ""}</span></div>
@@ -564,14 +555,38 @@ function renderReview() {
             <span class="t">${ftime(e.frame)}</span><i class="evdot" style="background:${EV[e.type].color}"></i>
             <span style="min-width:0;flex:1"><b>${esc(e.label)}</b> <span class="sub">${esc(e.sub)}</span></span>
             ${e.moment && e.type !== "habit" ? `<span class="tag ${sevTag(e.moment)}">${esc(e.moment.tag)}</span>` : e.type === "good" ? `<span class="tag good">${esc(hlTag(e.hl))}</span>` : ""}</button>`).join("")}`; }).join("")}</section>
-      <div class="grid2">
+      <div class="rvside">${evDetailHtml(sel)}
         <section class="card"><div class="card-head"><h2>What went well</h2></div>
           ${(g?.highlights || sum.highlights || []).length ? `<div class="wlist">${(g?.highlights || sum.highlights).slice().sort((a, b) => b.score - a.score).slice(0, 6).map((h) => `
             ${h.end || h.kind === "comeback" ? `<button class="wrow" data-ev="good|${h.frame}">` : `<div class="wrow static">`}<span class="tag good">${esc(hlTag(h))}</span><span style="min-width:0;flex:1"><b>${esc(h.title)}</b><span class="sub">${h.end || h.kind === "comeback" ? ftime(h.frame) + " · " : ""}${esc(h.detail)}</span></span>${h.end || h.kind === "comeback" ? "</button>" : "</div>"}`).join("")}</div>`
             : `<div class="sub" style="margin-top:8px">Nothing stood out this match. Highlights show up for long strings, early kills, gimps, clean stocks and comebacks.</div>`}</section>
         ${muCard(sum.oppChar, true)}
-      </div>`}
+      </div></div>`}
     </div></div></div>`;
+}
+
+// Review navigator: months (collapsible, like Games) → a divider per session → its matches, newest first.
+function reviewNav(sessList, sum) {
+  const monthOf = (iso) => new Date(iso).toLocaleDateString([], { month: "long", year: "numeric" });
+  const months = [];
+  for (const s of sessList) { const m = monthOf(s.start); let M = months[months.length - 1];
+    if (!M || M.m !== m) months.push(M = { m, sess: [], n: 0, l: [] }); M.sess.push(s); M.n += s.games.length; M.l.push(...s.games); }
+  ui.rmonOpen ||= new Set();
+  const selMon = sum ? monthOf(sum.startedAt) : null;
+  if (selMon && ui._rCloseMon !== selMon) ui.rmonOpen.add(selMon);
+  const rec = (l) => { const r = record(l.filter((x) => x.complete !== false)); return `${r.w}–${r.l}`; };
+  return months.map(({ m, sess, n, l }) => { const open = ui.rmonOpen.has(m);
+    return `<button class="gmon ${open ? "open" : ""}" data-rmon="${esc(m)}" aria-expanded="${open}"><span class="chev">›</span><span>${esc(m)}</span>
+      <span class="gdmeta">${n} match${n === 1 ? "" : "es"} · ${rec(l)}</span></button>
+      ${!open ? "" : sess.map((x) => { const gs = x.games.slice().sort((a, b) => Date.parse(a.startedAt) - Date.parse(b.startedAt));
+        return `<div class="rsess ${x.start === ui.session ? "cur" : ""}"><span>${day(x.start)} · ${clock(x.start)}</span><span class="sub">${gs.length} · ${rec(gs)}</span></div>
+          ${gs.slice().reverse().map((g) => { const t = g.totals || {}; const lcm = (t.lcTotal || 0) - (t.lcOk || 0);
+            return `<button class="grow ${sum && g.id === sum.id ? "sel" : ""}" data-rgame="${esc(g.id)}" data-rsess="${esc(x.start)}">
+              ${chip(g.oppChar, 34)}
+              <span class="who"><div>vs ${esc(g.oppChar)}${g.oppCode ? ` <span class="sub">${esc(g.oppCode)}</span>` : ""}</div>
+                <div class="sub">#${gs.indexOf(g) + 1} · ${clock(g.startedAt)} · ${esc(g.stage)}</div>
+                <div class="gcounts"><span title="Missed L-cancels"><i style="background:${EV.lcancel.color}"></i>${lcm}</span><span title="Missed techs"><i style="background:${EV.tech.color}"></i>${t.missedTechs || 0}</span><span class="vid" data-vid="${esc(g.id)}" title="Full match recorded"></span></div></span>
+              <span class="res ${g.result}">${g.result === "win" ? "W" : g.result === "loss" ? "L" : "–"}</span></button>`; }).join("")}`; }).join("")}`; }).join("");
 }
 
 // ------------------------------------------------------------------ match video
@@ -625,7 +640,7 @@ function mountPlayer(box, gid, info, clipEv) {
   const len = meta.end - meta.start + 1, at = (f) => `${Math.max(0, Math.min(100, (100 * (f - meta.start)) / len))}%`;
   box.innerHTML = `${clipEv ? `<div class="clipbar"><span class="tag teal">CLIP</span><span class="sub">${ftime(meta.start)}–${ftime(meta.end)} of this match</span>
       ${fst && fst.state !== "error" ? `<span class="sub end">${fst.state === "rendering" ? `Recording full match… ${fst.pct ?? 0}%` : "Full match recording queued"}</span>` : `<button class="btn end" data-record="1">Record full match (${dur(g?.durationFrames || 0)})</button>`}</div>` : ""}
-    <div class="player" style="--player-h:${cfg.playerH || 50}vh"><video src="${info.url}" preload="auto" playsinline></video><div class="pnote" hidden></div></div>
+    <div class="player" style="--player-h:${cfg.playerH || 60}vh"><video src="${info.url}" preload="auto" playsinline></video><div class="pnote" hidden></div></div>
     <div class="vresize" role="separator" aria-orientation="horizontal" aria-label="Video size" tabindex="0" title="Drag to make the video bigger or smaller (double-click to reset)"><span></span></div>
     <div class="scrub" data-scrub>
       ${(g?.stocks || []).slice(1).map((st) => `<span class="stk" style="left:${at(st.startFrame)}" title="Stock ${st.n}"></span>`).join("")}
@@ -699,11 +714,11 @@ function mountPlayer(box, gid, info, clipEv) {
   // drag the bar under the video to resize it; the size is remembered
   const vr = $(".vresize", box), pl = $(".player", box);
   const setH = (vh, save) => { vh = Math.max(25, Math.min(85, Math.round(vh))); pl.style.setProperty("--player-h", vh + "vh"); if (save) api.setConfig({ playerH: vh }).then((c) => (cfg = c)); return vh; };
-  vr.onpointerdown = (e) => { e.preventDefault(); try { vr.setPointerCapture(e.pointerId); } catch {} const y0 = e.clientY, h0 = pl.getBoundingClientRect().height; let vh = cfg.playerH || 50;
+  vr.onpointerdown = (e) => { e.preventDefault(); try { vr.setPointerCapture(e.pointerId); } catch {} const y0 = e.clientY, h0 = pl.getBoundingClientRect().height; let vh = cfg.playerH || 60;
     vr.onpointermove = (m) => { vh = setH(((h0 + m.clientY - y0) / innerHeight) * 100); };
     vr.onpointerup = () => { vr.onpointermove = vr.onpointerup = null; setH(vh, true); }; };
-  vr.ondblclick = () => setH(50, true);
-  vr.onkeydown = (e) => { if (e.key === "ArrowUp" || e.key === "ArrowDown") { e.preventDefault(); setH((cfg.playerH || 50) + (e.key === "ArrowDown" ? 5 : -5), true); } };
+  vr.ondblclick = () => setH(60, true);
+  vr.onkeydown = (e) => { if (e.key === "ArrowUp" || e.key === "ArrowDown") { e.preventDefault(); setH((cfg.playerH || 60) + (e.key === "ArrowDown" ? 5 : -5), true); } };
   box.tabIndex = -1;
   box.onkeydown = (e) => { if (e.key === "f" || e.key === "F") { fs(); e.preventDefault(); return; } if (e.key === "," || e.key === "ArrowLeft") { step(-1); e.preventDefault(); } else if (e.key === "." || e.key === "ArrowRight") { step(1); e.preventDefault(); } else if (e.key === " ") { v.paused ? v.play() : v.pause(); e.preventDefault(); } };
   const rb = $("[data-record]", box);
@@ -797,7 +812,7 @@ function renderEvDetail() {
   const g = cache.get(ui.rGame); if (!g) return;
   const sel = gameEvents(g).find((e) => evKey(e) === ui.rEvent); const old = $(".evdetail");
   const html = evDetailHtml(sel);
-  if (old) old.outerHTML = html || ""; else if (html) $(".evlist")?.insertAdjacentHTML("beforebegin", html);
+  if (old) old.outerHTML = html || ""; else if (html) $(".rvside")?.insertAdjacentHTML("afterbegin", html);
 }
 async function markRecorded() {
   for (const el of $$("[data-vid]")) { const i = await api.clipInfo({ gameId: el.dataset.vid, frame: "full" }); el.classList.toggle("on", i.has); }
@@ -1154,7 +1169,7 @@ function renderSettings() {
 
 // ------------------------------------------------------------------ events
 // ------------------------------------------------------------------ resizable side lists
-const PANES = [[".games-layout > .glist", "games", 300], [".review > .snav", "sessions", 250], [".review > .glist", "matches", 290], [".review > .mulist", "matchups", 240]];
+const PANES = [[".games-layout:not(.rv-layout) > .glist", "games", 300], [".rv-layout > .glist", "review", 300], [".review > .mulist", "matchups", 240]];
 function addSplitters(el) {
   for (const [sel, key, def] of PANES) {
     const pane = $(sel, el); if (!pane || pane.nextElementSibling?.classList.contains("splitter")) continue;
@@ -1178,7 +1193,11 @@ function bind(el) {
   $$("[data-moment]", el).forEach((b) => b.onclick = () => { const [gid] = b.dataset.moment.split("|"); const g = games.find((x) => x.id === gid);
     const s = sessions(games).find((s) => s.games.some((x) => x.id === gid)); const [, f, type] = b.dataset.moment.split("|");
     go("review", { session: s?.start, rGame: gid, rEvent: `${type}|${f}` }); });
-  $$("[data-rgame]", el).forEach((b) => b.onclick = () => { ui.rGame = b.dataset.rgame; ui.rEvent = null; const y = $(".glist", el)?.scrollTop; render(); const n = $(".glist"); if (n && y) n.scrollTop = y; });
+  $$("[data-rgame]", el).forEach((b) => b.onclick = () => { ui.rGame = b.dataset.rgame; if (b.dataset.rsess) ui.session = b.dataset.rsess; ui.rEvent = null;
+    const y = $(".glist .rows", el)?.scrollTop; ui._rScrolled = true; render(); const n = $(".glist .rows"); if (n && y != null) n.scrollTop = y; });
+  $$("[data-rmon]", el).forEach((b) => b.onclick = () => { const m = b.dataset.rmon; ui.rmonOpen ||= new Set();
+    if (ui.rmonOpen.has(m)) { ui.rmonOpen.delete(m); ui._rCloseMon = m; } else { ui.rmonOpen.add(m); if (ui._rCloseMon === m) ui._rCloseMon = null; }
+    const y = $(".glist .rows", el)?.scrollTop; render(); const n = $(".glist .rows"); if (n && y != null) n.scrollTop = y; });
   $$("[data-gstep]", el).forEach((b) => b.onclick = () => { const s = sessions(byOpp(games)).find((x) => x.start === ui.session); const gs = (s?.games || []).slice().sort((a, c) => Date.parse(a.startedAt) - Date.parse(c.startedAt));
     const i = gs.findIndex((x) => x.id === ui.rGame) + +b.dataset.gstep; if (gs[i]) { ui.rGame = gs[i].id; ui.rEvent = null; render(); } });
   $$("[data-ev]", el).forEach((b) => b.onclick = () => { if (player && player.gid === ui.rGame) player.select(b.dataset.ev); else { ui.rEvent = b.dataset.ev; $$(".evrow").forEach((r) => r.classList.toggle("sel", r.dataset.ev === ui.rEvent)); renderEvDetail(); loadMatch(); } });
@@ -1231,7 +1250,7 @@ function bind(el) {
   });
   $$("[data-act=openClips]", el).forEach((b) => b.onclick = () => api.openClips());
   $$("[data-act=clipCheck]", el).forEach((b) => b.onclick = () => renderClipCheck());
-  if (view === "review") { loadMatch(); markRecorded(); }
+  if (view === "review") { loadMatch(); markRecorded(); if (!ui._rScrolled) $(".rv-layout .grow.sel", el)?.scrollIntoView({ block: "center" }); ui._rScrolled = false; }
   if (view === "settings") renderClipCheck();
   $$("[data-act=addfolder]", el).forEach((b) => b.onclick = async () => { const f = await api.pickFolder(); if (f) { cfg = await api.setConfig({ importFolders: [...cfg.importFolders, f] }); render(); api.import({ folders: [f], sinceDays: 0 }); } });
   $$("[data-rmfolder]", el).forEach((b) => b.onclick = async () => { const l = [...cfg.importFolders]; l.splice(+b.dataset.rmfolder, 1); cfg = await api.setConfig({ importFolders: l }); render(); });
