@@ -21,6 +21,18 @@ const newer = (a, b) => { const x = a.split(".").map(Number), y = b.split(".").m
 
 async function checkAndApply({ repo, current, appDir, log = () => {} }) {
   if (!repo) return { state: "off" };
+  // 1) updates/latest.json on the main branch (pushing is enough to publish)
+  let man = null;
+  try { man = await get(`https://raw.githubusercontent.com/${repo}/main/updates/latest.json?t=${Date.now()}`); } catch {}
+  if (man && man.version) {
+    if (!newer(man.version, current)) return { state: "current", version: current };
+    if (man.installer) return { state: "installer", version: man.version, url: `https://github.com/${repo}/releases` };
+    const pack = JSON.parse(zlib.gunzipSync(await get(`https://raw.githubusercontent.com/${repo}/main/${man.file}`, false)).toString("utf8"));
+    if (pack.version !== man.version || !pack.files) throw new Error("Update package looks wrong.");
+    applyPack(pack, appDir); log(`[update] applied ${man.version}`);
+    return { state: "applied", version: man.version };
+  }
+  // 2) GitHub releases
   const rel = await get(`https://api.github.com/repos/${repo}/releases/latest`);
   const ver = String(rel.tag_name || "").replace(/^v/, "");
   if (!ver || !newer(ver, current)) return { state: "current", version: current };

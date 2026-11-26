@@ -10,4 +10,9 @@ files["package.json"] = Buffer.from(JSON.stringify({ name: pkg.name, productName
 fs.mkdirSync(path.join(root, "dist"), { recursive: true });
 const out = path.join(root, "dist", `app-${pkg.version}.mcupd`);
 fs.writeFileSync(out, zlib.gzipSync(JSON.stringify({ version: pkg.version, files })));
+// publishable copy in updates/ (committed): only the newest package is kept
+const up = path.join(root, "updates"); fs.mkdirSync(up, { recursive: true });
+for (const f of fs.readdirSync(up)) if (f.endsWith(".mcupd")) fs.unlinkSync(path.join(up, f));
+fs.copyFileSync(out, path.join(up, path.basename(out)));
+fs.writeFileSync(path.join(up, "latest.json"), JSON.stringify({ version: pkg.version, notes: pkg.notes || [], file: `updates/${path.basename(out)}`, installer: !!process.env.NEEDS_INSTALLER }, null, 2));
 console.log(out, (fs.statSync(out).size / 1024).toFixed(0) + " KB", Object.keys(files).length + " files");

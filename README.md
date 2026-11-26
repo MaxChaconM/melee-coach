@@ -15,7 +15,8 @@ npx electron .
 
 ## Release
 1. Bump `version` and `notes` in package.json.
-2. `node build/pack-update.js` → `dist/app-<version>.mcupd`.
-3. Create a GitHub release tagged `v<version>` and attach the `.mcupd` (and the installer when Electron or node modules change).
+2. `node build/pack-update.js` writes `updates/latest.json` and `updates/app-<version>.mcupd`.
+   Set `NEEDS_INSTALLER=1` when Electron or node modules changed; installed apps then point to the Releases page instead.
+3. Commit and push to `main`.
 
-Installed apps check the latest release every 6 hours and install `.mcupd` updates themselves.
+Installed apps read `updates/latest.json` from `main` every 6 hours (and from Settings → Updates → Check now) and install the update themselves.

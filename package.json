@@ -1,6 +1,6 @@
 {
   "name": "melee-coach",
-  "version": "0.11.1",
+  "version": "0.11.2",
   "description": "Live coaching and replay analysis for Super Smash Bros. Melee",
   "main": "main.js",
   "scripts": {
@@ -67,8 +67,8 @@
     "afterPack": "build/afterPack.js"
   },
   "notes": [
-    "Updates now come from github.com/MaxChaconM/melee-coach",
-    "Everything from 0.11.0: input timeline, training plan, Players view, session recap, Rivals 2 OBS clips"
+    "Updates now come straight from github.com/MaxChaconM/melee-coach",
+    "Everything from 0.11: input timeline, training plan, Players view, session recap, Rivals 2 OBS clips"
   ],
   "repository": "github:MaxChaconM/melee-coach"
 }

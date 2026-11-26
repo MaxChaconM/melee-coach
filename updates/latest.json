@@ -1,0 +1,9 @@
+{
+  "version": "0.11.2",
+  "notes": [
+    "Updates now come straight from github.com/MaxChaconM/melee-coach",
+    "Everything from 0.11: input timeline, training plan, Players view, session recap, Rivals 2 OBS clips"
+  ],
+  "file": "updates/app-0.11.2.mcupd",
+  "installer": false
+}
