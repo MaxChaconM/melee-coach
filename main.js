@@ -220,22 +220,24 @@ function readVersion() { return readPkg().version || app.getVersion(); }
 // Updates always write package.json last, so only that file signals "update finished".
 // One notice per new version, never for a version that's already running or already announced.
 let announced = null;
+function announceUpdate() {
+  const pk = readPkg(); const v = pk.version;
+  if (!v || v === app.getVersion() || v === announced) return;
+  announced = v; pendingUpdate = { version: v, notes: pk.notes || [] };
+  send("update", { state: "ready", ...pendingUpdate });
+  if (!win || !win.isVisible()) {
+    try { const { Notification } = require("electron"); const n = new Notification({ title: `Melee Coach ${v} is ready`, body: "Click to restart and use the new version." }); n.on("click", restartApp); n.show(); } catch {}
+  }
+  refreshTrayMenu && refreshTrayMenu();
+}
 function watchForUpdates() {
   let timer = null;
   try {
     fs.watch(__dirname, { recursive: true }, (_ev, file) => {
-      if (!file || path.basename(String(file)) !== "package.json" || /node_modules/.test(file)) return;
+      // the GitHub updater writes package.json.new and renames it, so accept both names
+      if (!file || !/^package\.json(\.new)?$/.test(path.basename(String(file))) || /node_modules/.test(file)) return;
       clearTimeout(timer);
-      timer = setTimeout(() => {
-        const pk = readPkg(); const v = pk.version;
-        if (!v || v === app.getVersion() || v === announced) return;
-        announced = v; pendingUpdate = { version: v, notes: pk.notes || [] };
-        send("update", { state: "ready", ...pendingUpdate });
-        if (!win || !win.isVisible()) {
-          try { const { Notification } = require("electron"); const n = new Notification({ title: `Melee Coach ${v} is ready`, body: "Click to restart and use the new version." }); n.on("click", restartApp); n.show(); } catch {}
-        }
-        refreshTrayMenu && refreshTrayMenu();
-      }, 3000);
+      timer = setTimeout(announceUpdate, 3000);
     });
   } catch (e) { console.log("[update] can't watch app folder:", e.message); }
 }
@@ -269,6 +271,7 @@ async function checkGithubUpdate(manual) {
   try {
     const r = await require("./engine/updater").checkAndApply({ repo: cfg.updateRepo, current: readVersion(), appDir: __dirname, log: (m) => console.log(m) });
     if (r.state === "installer") send("update", { state: "installer", version: r.version, url: r.url });
+    if (r.state === "applied" || r.state === "current") announceUpdate(); // don't rely on the folder watcher for our own writes
     return r;
   } catch (e) { console.log("[update]", e.message); return { state: "error", error: e.message }; }
 }

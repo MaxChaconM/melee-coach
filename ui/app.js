@@ -1158,7 +1158,9 @@ function bind(el) {
   $$("[data-obs]", el).forEach((i) => i.onchange = async () => { const k = i.dataset.obs; const v = i.type === "checkbox" ? i.checked : k === "port" ? +i.value : i.value;
     cfg = await api.setConfig({ obs: { ...(cfg.obs || {}), [k]: v } }); });
   $$("[data-act=checkUpdate]", el).forEach((b) => b.onclick = async () => { const o = $("#updStatus"); o.textContent = "Checking…"; const r = await api.checkUpdate();
-    o.textContent = r.state === "current" ? `Up to date (v${r.version})` : r.state === "applied" ? `v${r.version} installed, restart from the pop-up` : r.state === "installer" ? `v${r.version} needs the full installer` : r.state === "error" ? `Couldn't check: ${r.error}` : "Off"; });
+    o.textContent = r.state === "current" ? `Up to date (v${r.version})` : r.state === "applied" ? `v${r.version} installed.`  : r.state === "installer" ? `v${r.version} needs the full installer` : r.state === "error" ? `Couldn't check: ${r.error}` : "Off"; });
+  $$("[data-act=checkUpdate]", el).forEach((b) => { const orig = b.onclick; b.onclick = async () => { await orig(); const o = $("#updStatus");
+    if (/installed/.test(o.textContent)) { o.insertAdjacentHTML("beforeend", ' <button class="btn primary" data-act="restartNow">Restart now</button>'); $("[data-act=restartNow]", o).onclick = () => api.restartApp(); } }; });
   $$("[data-act=obsTest]", el).forEach((b) => b.onclick = async () => { const o = $("#obsStatus"); o.textContent = "Connecting…"; const r = await api.obsStatus();
     o.innerHTML = r.ok ? `<span class="good">● Connected</span> · OBS ${esc(r.version)} · replay buffer ${r.replayBuffer ? "running" : "<span class='bad'>off</span> (it's started automatically on the first save)"}` : `<span class="bad">● ${esc(r.error)}</span>`; });
   $$("[data-act=obsSave]", el).forEach((b) => b.onclick = async () => { b.disabled = true; b.textContent = "Saving…"; const r = await api.obsSaveNow(); b.textContent = r.ok ? "Saved" : "Save clip now"; b.disabled = false; if (!r.ok) alertBar(r.error); r2Refresh(); });
