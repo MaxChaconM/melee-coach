@@ -257,7 +257,7 @@ ipcMain.handle("justUpdated", () => {
 // ---------------------------------------------------------------- re-analysis
 // Games analysed by an older version are re-read from their replay in the background
 // (v2 records every move in each combo, which the highlights and Matchups page use).
-const ANALYSIS_V = 3; // v3: opponent habits for the opponent notes
+const ANALYSIS_V = 4; // v3: opponent habits · v4: your in-game name and costume
 async function upgradeOldGames() {
   const old = store.list().filter((g) => g.file && (g.v || 1) < ANALYSIS_V && fs.existsSync(g.file)).map((g) => g.file);
   if (!old.length) return;
@@ -275,6 +275,7 @@ async function checkGithubUpdate(manual) {
     return r;
   } catch (e) { console.log("[update]", e.message); return { state: "error", error: e.message }; }
 }
+ipcMain.handle("charArt", (_e, { char, index }) => { try { return require("./engine/art").charArt(char, index || 0); } catch (e) { return { found: false, error: e.message }; } });
 ipcMain.handle("checkUpdate", () => checkGithubUpdate(true));
 ipcMain.handle("openExternal", (_e, url) => { if (/^https:\/\/github\.com\//.test(url)) shell.openExternal(url); });
 

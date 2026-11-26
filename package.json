@@ -1,6 +1,6 @@
 {
   "name": "melee-coach",
-  "version": "0.13.2",
+  "version": "0.14.0",
   "description": "Live coaching and replay analysis for Super Smash Bros. Melee",
   "main": "main.js",
   "scripts": {
@@ -67,8 +67,9 @@
     "afterPack": "build/afterPack.js"
   },
   "notes": [
-    "Drag the timeline like on YouTube: hold the circle (or anywhere on the bar) and the video follows your mouse; hover to see the time",
-    "Volume slider and mute button next to full screen (M to mute); your level is remembered"
+    "New Home: your main's portrait from your own texture pack (Melee HD, Animelee…), with your record, latest match and best highlights beside it",
+    "Hover the portrait to switch costumes",
+    "Your in-game name now shows on Home (older games are updated in the background)"
   ],
   "repository": "github:MaxChaconM/melee-coach"
 }

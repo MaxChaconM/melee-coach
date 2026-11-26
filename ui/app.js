@@ -193,6 +193,42 @@ function recapCard() {
     </div></section>`;
 }
 
+// Home hero: your main's portrait (from your own texture pack), with record, latest match and highlights
+function homeHero() {
+  const mains = topCounts(games.map((g) => g.myChar), 1); const main = mains[0]?.[0] || "Captain Falcon";
+  const mine = games.filter((g) => g.myChar === main); const done = mine.filter((g) => g.complete !== false);
+  const all = record(done); const recent = record(done.slice(0, 50));
+  const latest = games[0]; const lv = latest ? metricVals(aggSummaries([latest])) : {};
+  const name = games.find((g) => g.myName)?.myName || cfg.connectCode || "Player";
+  const hls = games.slice(0, 30).flatMap((g) => (g.highlights || []).map((h) => ({ ...h, g }))).filter((h) => h.kind === "string" || h.kind === "comeback" || h.kind === "4stock")
+    .sort((a, b) => b.score - a.score).slice(0, 3);
+  const winp = (r) => (r.w + r.l ? Math.round((100 * r.w) / (r.w + r.l)) : null);
+  return `<section class="hero">
+    <div class="hero-art" id="heroArt" data-char="${esc(main)}"><div class="hero-ph">${esc(main.split(" ").map((w) => w[0]).join("").slice(0, 2))}</div></div>
+    <div class="hero-main">
+      <div class="hero-top"><div><div class="eyebrow">Welcome back</div><h1>${esc(name)}</h1>
+        <div class="sub">${cfg.connectCode ? esc(cfg.connectCode) + " · " : ""}${esc(main)} main · ${mine.length} games · last played ${day(games[0].startedAt)}</div></div>
+        <div class="hero-act">${statusPill()}<button class="btn" data-act="import">Import replays</button></div></div>
+      <div class="hero-grid">
+        <div class="stat hero-rec"><label>Record as ${esc(main)}</label><b>${all.w}–${all.l}</b><span>${fmt(winp(all), "%")} wins · last 50: ${recent.w}–${recent.l}</span></div>
+        ${latest ? `<button class="hero-card" data-game="${esc(latest.id)}"><div class="eyebrow">Latest match</div>
+          <div class="hl-row">${chip(latest.oppChar, 34)}<div style="min-width:0"><b>vs ${esc(latest.oppChar)}</b> <span class="res ${latest.result}">${latest.result === "win" ? "W" : latest.result === "loss" ? "L" : "–"}</span>
+            <div class="sub">${esc(latest.stage)} · ${dur(latest.durationFrames || 0)} · ${when(latest.startedAt)}</div></div></div>
+          <div class="gmini"><span>L-cancels ${fmt(lv.lc, "%")}</span><span>Missed techs ${fmt(lv.tech, "%")}</span><span>Openings/kill ${fmt(lv.opk, "")}</span></div></button>` : ""}
+        <div class="hero-card hero-hl"><div class="card-head"><div class="eyebrow">Highlights</div><button class="linkbtn end" data-go="highlights">All →</button></div>
+          ${hls.length ? hls.map((h) => `<button class="hl-row" data-hlgo="${esc(h.g.id)}|${h.frame}">${chip(h.g.oppChar, 26)}<span style="min-width:0;flex:1"><b>${esc(h.title)}</b><span class="sub" style="display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">vs ${esc(h.g.oppChar)} · ${esc(h.detail || "")}</span></span></button>`).join("")
+            : `<div class="sub" style="margin-top:6px">Your best plays show up here.</div>`}</div>
+      </div>
+    </div></section>`;
+}
+async function loadHeroArt() {
+  const box = $("#heroArt"); if (!box) return; const ch = box.dataset.char; const idx = (cfg.artCostume || {})[ch] || 0;
+  const r = await api.charArt(ch, idx); if (!box.isConnected) return;
+  if (!r.found) { box.title = r.pack ? `No ${ch} portrait in your ${r.pack} pack` : "Install a texture pack (Melee HD, Animelee…) to see your character here"; return; }
+  box.innerHTML = `<img src="${r.data}" alt="${esc(ch)}"><span class="hero-pack">${esc(r.pack || "")}</span>
+    ${r.count > 1 ? `<div class="hero-cost"><button class="btn icon" data-cost="-1" aria-label="Previous costume">‹</button><span>${r.index + 1}/${r.count}</span><button class="btn icon" data-cost="1" aria-label="Next costume">›</button></div>` : ""}`;
+  $$("[data-cost]", box).forEach((b) => b.onclick = async () => { const n = r.index + +b.dataset.cost; cfg = await api.setConfig({ artCostume: { ...(cfg.artCostume || {}), [ch]: n } }); loadHeroArt(); });
+}
 function renderHome() {
   if (!games.length) return `<div class="page">${liveStrip()}<div class="card empty">
     <h2 style="color:var(--text);margin-bottom:6px">No games yet</h2>
@@ -214,11 +250,7 @@ function renderHome() {
     ? `Misses: <b style="color:var(--yellow)">${t.lcEarly} early</b>, ${t.lcLate} late, ${t.lcNone} with no press.${t.lcEarly > t.lcLate * 2 ? " Press L closer to touching the ground, not as the aerial comes out." : ""}`
     : fm?.why || "";
   return `<div class="page">${liveStrip()}
-    <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap">
-      <div><h1 style="margin:0;font-size:26px;letter-spacing:-.3px">Welcome back</h1>
-        <div class="sub" style="font-size:13.5px">${cfg.connectCode ? esc(cfg.connectCode) + " · " : ""}last played ${day(last.end)}</div></div>
-      <div style="margin-left:auto;display:flex;gap:10px;align-items:center;flex-wrap:wrap">${statusPill()}<button class="btn" data-act="import">Import replays</button></div>
-    </div>
+    ${homeHero()}
     ${recapCard()}
 
     <div class="grid2">
@@ -1274,6 +1306,9 @@ function bind(el) {
   });
   $$("[data-act=openClips]", el).forEach((b) => b.onclick = () => api.openClips());
   $$("[data-act=clipCheck]", el).forEach((b) => b.onclick = () => renderClipCheck());
+  if (view === "home") loadHeroArt();
+  $$("[data-hlgo]", el).forEach((b) => b.onclick = () => { const [gid, f] = b.dataset.hlgo.split("|"); const sess = sessions(games).find((x) => x.games.some((y) => y.id === gid));
+    go("review", { session: sess?.start, rGame: gid, rEvent: `good|${f}` }); });
   if (view === "review") { loadMatch(); markRecorded(); if (!ui._rScrolled) $(".rv-layout .grow.sel", el)?.scrollIntoView({ block: "center" }); ui._rScrolled = false; }
   if (view === "settings") renderClipCheck();
   $$("[data-act=addfolder]", el).forEach((b) => b.onclick = async () => { const f = await api.pickFolder(); if (f) { cfg = await api.setConfig({ importFolders: [...cfg.importFolders, f] }); render(); api.import({ folders: [f], sinceDays: 0 }); } });

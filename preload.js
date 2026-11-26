@@ -5,6 +5,7 @@ contextBridge.exposeInMainWorld("coach", {
   r2Data: () => ipcRenderer.invoke("r2Data"),
   r2Hide: (id) => ipcRenderer.invoke("r2Hide", id),
   obsStatus: () => ipcRenderer.invoke("obsStatus"),
+  charArt: (char, index) => ipcRenderer.invoke("charArt", { char, index }),
   checkUpdate: () => ipcRenderer.invoke("checkUpdate"),
   openExternal: (u) => ipcRenderer.invoke("openExternal", u),
   obsSaveNow: () => ipcRenderer.invoke("obsSaveNow"),

@@ -36,6 +36,7 @@ class GameCoach {
       stage: STAGE[settings.stageId] || `Stage ${settings.stageId}`,
       myChar: CHAR[me.characterId] || "?", oppChar: CHAR[opp.characterId] || "?",
       myCode: me.connectCode || null, oppCode: opp.connectCode || null,
+      myName: me.displayName || me.nametag || null, myColor: me.characterColor ?? null,
       oppName: opp.displayName || opp.nametag || null, online: !!opp.connectCode, vsCpu: opp.type === 1,
     };
     this.my = new Side(); this.op = new Side();
@@ -233,7 +234,7 @@ class GameCoach {
       result = m.stocksRemaining > o.stocksRemaining ? "win" : m.stocksRemaining < o.stocksRemaining ? "loss" : "unknown";
     const game = {
       ...this.meta, result, endMethod: gameEnd?.gameEndMethod ?? null, complete: gameEnd?.gameEndMethod !== 7,
-      v: 3, oppHabits: this.oppHabits, durationFrames: this.frameNo, endStocks: { me: m?.stocksRemaining ?? null, opp: o?.stocksRemaining ?? null },
+      v: 4, oppHabits: this.oppHabits, durationFrames: this.frameNo, endStocks: { me: m?.stocksRemaining ?? null, opp: o?.stocksRemaining ?? null },
       stocks: this.stocks.map((x) => ({ ...x, dmgDealt: Math.round(x.dmgDealt), dmgTaken: Math.round(x.dmgTaken) })),
       conversions: this.conversions,
     };
