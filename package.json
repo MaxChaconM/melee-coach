@@ -1,6 +1,6 @@
 {
   "name": "melee-coach",
-  "version": "0.12.1",
+  "version": "0.12.2",
   "description": "Live coaching and replay analysis for Super Smash Bros. Melee",
   "main": "main.js",
   "scripts": {
@@ -67,9 +67,8 @@
     "afterPack": "build/afterPack.js"
   },
   "notes": [
-    "Fixed: the restart pop-up now appears for updates downloaded from GitHub",
-    "Settings → Updates → Check now shows a Restart button when an update is installed",
-    "Includes 0.12.0: the new Melee look (Settings → App → Look to switch back)"
+    "Menu has its own darker panel with a divider, so buttons no longer run into the page",
+    "☰ button (or Ctrl+B) collapses the menu to icons; it remembers your choice"
   ],
   "repository": "github:MaxChaconM/melee-coach"
 }

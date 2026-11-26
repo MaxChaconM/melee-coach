@@ -19,7 +19,7 @@ const DEFAULTS = {
   importFolders: [path.join(os.homedir(), "Downloads", "MeleeUnlocked-0.9.201-win64", "MeleeUnlocked-0.9.201", "Replays"),
                   path.join(os.homedir(), "Documents", "Slippi")],
   importSinceDays: 0,
-  game: "melee", r2Notes: {}, clipsAuto: false, clipsFast: true, clipsPrep: true, clipsPrepGames: 10, clipsIdleMin: 5, updateRepo: "MaxChaconM/melee-coach", theme: "melee", obs: { enabled: false, host: "127.0.0.1", port: 4455, password: "", autoRivals: true }, clipsPerGame: 3, clipsKeepDays: 30, isoPath: "", playbackDolphinDir: "",
+  game: "melee", r2Notes: {}, clipsAuto: false, clipsFast: true, clipsPrep: true, clipsPrepGames: 10, clipsIdleMin: 5, railCollapsed: false, updateRepo: "MaxChaconM/melee-coach", theme: "melee", obs: { enabled: false, host: "127.0.0.1", port: 4455, password: "", autoRivals: true }, clipsPerGame: 3, clipsKeepDays: 30, isoPath: "", playbackDolphinDir: "",
   targets: { lc: 80, tech: 20, opk: 5, dpo: 25, neutral: 55, gent: 80, knee: 70, ledge: 45, getup: 50 },
 };
 let cfg = loadConfig();

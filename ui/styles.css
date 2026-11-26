@@ -556,3 +556,26 @@ body.theme-melee .focus { background: linear-gradient(180deg, rgba(255,177,42,.1
 body.theme-melee .toast-ic { background: rgba(255,177,42,.15); color: var(--acc); }
 body.theme-melee .stat label { padding-right: 18px; }
 body.theme-melee .rail { padding-left: 22px; }
+
+/* ---------- menu rail: divider, darker backing, collapsible ---------- */
+.burger { -webkit-app-region: no-drag; width: 30px; height: 28px; border-radius: 7px; border: 0; background: none; color: var(--muted);
+  display: grid; place-items: center; margin-left: -6px; }
+.burger:hover { background: rgba(255,255,255,.08); color: var(--text); }
+.rail .lbl { white-space: nowrap; }
+body.rail-min .rail { width: 66px; }
+body.rail-min .rail .lbl { display: none; }
+body.rail-min .rail button { justify-content: center; }
+body.theme-melee .rail { width: 200px; padding: 22px 14px 16px; position: relative; z-index: 1;
+  background: linear-gradient(180deg, #060a28 0%, #040720 100%);
+  border-right: 1px solid rgba(140,170,255,.22); box-shadow: 1px 0 0 rgba(0,0,0,.6), 6px 0 18px rgba(0,0,0,.35); }
+body.theme-melee .rail::after { content: ""; position: absolute; top: 0; right: -1px; bottom: 0; width: 2px;
+  background: linear-gradient(180deg, transparent, rgba(255,177,42,.55) 18%, rgba(255,177,42,.15) 70%, transparent); }
+body.theme-melee .rail button { border-radius: 999px; }
+body.theme-melee .rail button:hover { transform: translateX(3px); }
+body.theme-melee .rail button.on { transform: translateX(5px); }
+body.theme-melee .burger:hover { color: var(--acc); }
+body.theme-melee.rail-min .rail { width: 74px; padding: 22px 10px 16px; }
+body.theme-melee.rail-min .rail button { padding: 11px 0; gap: 0; }
+body.theme-melee.rail-min .rail button.on::before { display: none; }
+body.theme-melee.rail-min .rail button:hover, body.theme-melee.rail-min .rail button.on { transform: none; }
+.rail, .rail button { transition: width .15s ease, padding .15s ease, transform .12s ease, filter .12s ease; }

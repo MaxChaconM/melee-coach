@@ -130,7 +130,16 @@ function liveStrip() {
 }
 const statusPill = () => `<span class="pill ${status.connected ? "on" : ""}"><span class="dot"></span>${status.connected ? (status.inGame ? "Live" : "Connected") : "Waiting for game"}</span>`;
 
+function applyRail() {
+  const c = !!cfg.railCollapsed; document.body.classList.toggle("rail-min", c);
+  const b = $("#burger"); if (b) { b.setAttribute("aria-expanded", String(!c)); b.setAttribute("aria-label", c ? "Expand menu" : "Collapse menu"); b.title = (c ? "Expand menu" : "Collapse menu") + " (Ctrl+B)"; }
+  $$(".rail button").forEach((x) => { x.title = c ? x.textContent.trim() : ""; });
+}
+async function toggleRail() { cfg = await api.setConfig({ railCollapsed: !cfg.railCollapsed }); applyRail(); }
+document.addEventListener("click", (e) => { if (e.target.closest("#burger")) toggleRail(); });
+document.addEventListener("keydown", (e) => { if (e.ctrlKey && !e.shiftKey && !e.altKey && e.key.toLowerCase() === "b" && !/INPUT|TEXTAREA|SELECT/.test(document.activeElement?.tagName)) { e.preventDefault(); toggleRail(); } });
 function applyGame() {
+  applyRail();
   const rv = cfg.game === "rivals";
   $$(".gswitch button").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.game === (cfg.game || "melee"))));
   $$('.rail [data-view="review"], .rail [data-view="progress"], .rail [data-view="highlights"]').forEach((b) => (b.hidden = rv));
