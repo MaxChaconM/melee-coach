@@ -1,0 +1,74 @@
+{
+  "name": "melee-coach",
+  "version": "0.11.1",
+  "description": "Live coaching and replay analysis for Super Smash Bros. Melee",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "dist": "electron-builder --win nsis --x64"
+  },
+  "author": "Max Chacon",
+  "license": "UNLICENSED",
+  "devDependencies": {
+    "electron": "^45.3.4",
+    "electron-builder": "^26.18.0",
+    "esbuild": "^0.24.2"
+  },
+  "dependencies": {
+    "@slippi/slippi-js": "^9.1.3"
+  },
+  "productName": "Melee Coach",
+  "build": {
+    "appId": "com.maxchacon.meleecoach",
+    "productName": "Melee Coach",
+    "asar": false,
+    "directories": {
+      "output": "dist",
+      "buildResources": "build"
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "engine/**",
+      "ui/**",
+      "build/icon.png",
+      "!node_modules/electron*/**",
+      "!node_modules/app-builder*/**",
+      "!node_modules/esbuild*/**",
+      "!node_modules/@esbuild/**",
+      "!**/*.map"
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "build/icon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Melee Coach",
+      "installerIcon": "build/icon.ico",
+      "uninstallerIcon": "build/icon.ico"
+    },
+    "publish": null,
+    "electronLanguages": [
+      "en-US"
+    ],
+    "compression": "maximum",
+    "afterPack": "build/afterPack.js"
+  },
+  "notes": [
+    "Updates now come from github.com/MaxChaconM/melee-coach",
+    "Everything from 0.11.0: input timeline, training plan, Players view, session recap, Rivals 2 OBS clips"
+  ],
+  "repository": "github:MaxChaconM/melee-coach"
+}
